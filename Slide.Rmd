@@ -1,0 +1,123 @@
+---
+title: "Wordcloud with my interests"
+author: "Guðfinna Kristinsdóttir"
+date: "19 August 2017"
+output: ioslides_presentation
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Wordcloud with my interests
+
+I made a shiny app that generates a word cloud out of three different books I chose from [Gutenberg](http://www.gutenberg.org). I chose Romeo and Juliet, Artists' Wives and Cathedrals and Cloisters of the South of France.
+
+## Overview
+
+This was the final project on the  [Developing Data Products](https://www.coursera.org/learn/data-products) course which I am taking as my last course on the [Data Science Specialization](https://www.coursera.org/specializations/jhu-data-science) on [Coursera](https://www.coursera.org).
+
+Source code for ui.R, server.R and global.R files are available on my GitHub repo:
+[https://github.com/guffakristins/Data-products-final](https://github.com/guffakristins/Data-products-final)
+
+The first part of the assignment was to develop a shiny app and host it on the shiny app site:
+[https://guffaakristins.shinyapps.io/Word_cloud/](https://guffaakristins.shinyapps.io/Word_cloud/)
+
+## App functionality
+
+The app itself makes a word cloud for three different books I picked out. 
+
+You choose a book in a drop down menu and press change when you want it to load. You choose the minimum frequency of the word in the book and the maximum number of words on the word cloud image. Both later options are on a slider. The words will appear in different colors and sizes depending on frequency of the word in the book.
+
+The code reads the books through .txt files I picked out and pictures the words that fall into the the above category.
+
+## The data
+
+The books are:
+[Romeo and Juliet](http://www.gutenberg.org/cache/epub/1112/pg1112.txt) by William Shakespeare.
+
+It's classic with beautiful words.
+
+[Cathedrals and Cloisters of the South of France](http://www.gutenberg.org/cache/epub/22718/pg22718.txt), Volume 1, by Elise Whitlock Rose
+
+I love architecture and cathedrals and cloisters are often described really beautifully and I could imaging the word cloud woud be beautiful
+
+[Artists' Wives](http://www.gutenberg.org/cache/epub/22522/pg22522.txt) by Alphonse Daudet
+
+I was honestly interested to see what came out :) 
+
+
+## My app
+
+```{r, echo=FALSE}
+shinyApp(
+  
+  ui = fluidPage(
+    # Application title
+        titlePanel("Word Cloud"),
+        
+        sidebarLayout(
+                # Sidebar with a slider and selection inputs
+                sidebarPanel(
+                        selectInput("selection", "Choose a book:",
+                                    choices = books),
+                        actionButton("update", "Change"),
+                        hr(),
+                        sliderInput("freq",
+                                    "Minimum Frequency:",
+                                    min = 1,  max = 50, value = 15),
+                        sliderInput("max",
+                                    "Maximum Number of Words:",
+                                    min = 1,  max = 300,  value = 100)
+                ),
+                
+                # Show Word Cloud
+                mainPanel(
+                        plotOutput("plot")
+                )
+        )
+),
+  
+  server = function(input, output, session) {
+        # Define a reactive expression for the document term matrix
+        terms <- reactive({
+                # Change when the "update" button is pressed...
+                input$update
+                # ...but not for anything else
+                isolate({
+                        withProgress({
+                                setProgress(message = "Processing corpus...")
+                                getTermMatrix(input$selection)
+                        })
+                })
+        })
+        
+        # Make the wordcloud drawing predictable during a session
+        wordcloud_rep <- repeatable(wordcloud)
+        
+        output$plot <- renderPlot({
+                v <- terms()
+                wordcloud_rep(names(v), v, scale=c(4,0.5),
+                              min.freq = input$freq, max.words=input$max,
+                              colors=brewer.pal(8, "Dark2"))
+        })
+},
+  
+  options = list(height = 500)
+)
+```
+
+## Bullets
+
+- Bullet 1
+- Bullet 2
+- Bullet 3
+
+## R Output
+
+```{r cars}
+summary(cars)
+```
+
+
